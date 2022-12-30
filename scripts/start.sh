@@ -2,21 +2,21 @@
 
 # Disable Strict Host checking for non interactive git clones
 
-mkdir -p -m 0700 /root/.ssh
+mkdir -p -m 0700 /home/node/.ssh
 
 
 # Prevent config files from being filled to infinity by force of stop and restart the container 
-echo "" > /root/.ssh/config
-echo -e "Host *\n\tStrictHostKeyChecking no\n" >> /root/.ssh/config
+echo "" > /home/node/.ssh/config
+echo -e "Host *\n\tStrictHostKeyChecking no\n" >> /home/node/.ssh/config
 
 if [[ "$GIT_USE_SSH" == "1" ]] ; then
-  echo -e "Host *\n\tUser ${GIT_USERNAME}\n\n" >> /root/.ssh/config
+  echo -e "Host *\n\tUser ${GIT_USERNAME}\n\n" >> /home/node/.ssh/config
 fi
 
 if [ ! -z "$SSH_KEY" ]; then
- echo $SSH_KEY > /root/.ssh/id_rsa.base64
- base64 -d /root/.ssh/id_rsa.base64 > /root/.ssh/id_rsa
- chmod 600 /root/.ssh/id_rsa
+ echo $SSH_KEY > /home/node/.ssh/id_rsa.base64
+ base64 -d /home/node/.ssh/id_rsa.base64 > /home/node/.ssh/id_rsa
+ chmod 600 /home/node/.ssh/id_rsa
 fi
 
 # Setup git variables
@@ -36,7 +36,9 @@ if [ ! -d "${WEBROOT}/.git" ]; then
    if [ ! -z ${REMOVE_FILES} ] && [ ${REMOVE_FILES} == 0 ]; then
      echo "skiping removal of files"
    else
-     rm -Rf ${WEBROOT}/*
+     sudo rm -Rf ${WEBROOT}/*
+     sudo chown node:node ${WEBROOT}
+     cd ${WEBROOT}
    fi
    GIT_COMMAND='git clone '
    if [ ! -z "$GIT_BRANCH" ]; then
@@ -60,8 +62,13 @@ if [ ! -d "${WEBROOT}/.git" ]; then
      git checkout ${GIT_COMMIT} || exit 1
    fi
    if [ -z "$SKIP_CHOWN" ]; then
-     chown -Rf node:node ${WEBROOT}
+     sudo chown -Rf node:node ${WEBROOT}
    fi
+ else
+  mkdir -p ${WEBROOT}/src
+  echo "exec sleep 100000" > ${WEBROOT}/src/start.sh
+  sudo chown -R node:node ${WEBROOT}
+  sudo chmod 7500 ${WEBROOT}/src/start.sh
  fi
 fi
 
@@ -71,7 +78,7 @@ if [[ "$RUN_SCRIPTS" == "1" ]] ; then
   if [ -d "$scripts_dir" ]; then
     if [ -z "$SKIP_CHMOD" ]; then
       # make scripts executable incase they aren't
-      chmod -Rf 750 $scripts_dir; sync;
+      sudo chmod -Rf 750 $scripts_dir; sync;
     fi
     # run scripts in number order
     for i in `ls $scripts_dir`; do $scripts_dir/$i ; done
@@ -91,10 +98,10 @@ if [ -z "$SKIP_NPM" ]; then
     fi
 fi
 
-# Set custom webroot
+# Set custom webhome/node
 if [ ! -z "$WEBROOT" ]; then
- sed -i "s#command = /var/www/html;#command = ${WEBROOT};#g" /etc/supervisord.conf
+ sudo sed -i "s#command = /var/www/app;#command = ${WEBROOT};#g" /etc/supervisord.conf
 fi
 
 # Start supervisord and services
-exec /usr/bin/supervisord -n -c /etc/supervisord.conf
+sudo /usr/bin/supervisord -n -c /etc/supervisord.conf
