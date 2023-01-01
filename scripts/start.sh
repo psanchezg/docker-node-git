@@ -88,14 +88,13 @@ if [[ "$RUN_SCRIPTS" == "1" ]] ; then
 fi
 
 if [ -z "$SKIP_NPM" ]; then
-    # Try auto install for composer
-    if [ -f "${WEBROOT}/package-lock.json" ]; then
-        if [ "$APPLICATION_ENV" == "development" ]; then
-            cd ${WEBROOT}/src; npm install
-        else
-            cd ${WEBROOT}/src; npm install --omit=dev
-        fi
-    fi
+  if [ "$APPLICATION_ENV" == "development" ]; then
+    echo "Install npm packages and dev dependencies"
+    cd ${WEBROOT}/src; npm install
+  else
+    echo "Install npm packages"
+    cd ${WEBROOT}/src; npm install --omit=dev
+  fi
 fi
 
 # Set custom webhome/node
