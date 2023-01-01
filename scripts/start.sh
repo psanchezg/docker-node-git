@@ -91,9 +91,9 @@ if [ -z "$SKIP_NPM" ]; then
     # Try auto install for composer
     if [ -f "${WEBROOT}/package-lock.json" ]; then
         if [ "$APPLICATION_ENV" == "development" ]; then
-            cd ${WEBROOT}; npm install
+            cd ${WEBROOT}/src; npm install
         else
-            cd ${WEBROOT}; npm install --omit=dev
+            cd ${WEBROOT}/src; npm install --omit=dev
         fi
     fi
 fi
