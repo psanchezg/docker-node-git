@@ -3,6 +3,7 @@
 # Disable Strict Host checking for non interactive git clones
 
 mkdir -p -m 0700 /home/node/.ssh
+mkdir -p /var/log/node
 
 
 # Prevent config files from being filled to infinity by force of stop and restart the container 
@@ -36,8 +37,8 @@ if [ ! -d "${WEBROOT}/.git" ]; then
    if [ ! -z ${REMOVE_FILES} ] && [ ${REMOVE_FILES} == 0 ]; then
      echo "skiping removal of files"
    else
-     sudo rm -Rf ${WEBROOT}/*
-     sudo chown node:node ${WEBROOT}
+     rm -Rf ${WEBROOT}/*
+     chown -R node:node ${WEBROOT}
      cd ${WEBROOT}
    fi
    GIT_COMMAND='git clone '
@@ -62,13 +63,13 @@ if [ ! -d "${WEBROOT}/.git" ]; then
      git checkout ${GIT_COMMIT} || exit 1
    fi
    if [ -z "$SKIP_CHOWN" ]; then
-     sudo chown -Rf node:node ${WEBROOT}
+     chown -Rf node:node ${WEBROOT}
    fi
  else
   mkdir -p ${WEBROOT}/src
   echo "exec sleep 100000" > ${WEBROOT}/src/start.sh
-  sudo chown -R node:node ${WEBROOT}
-  sudo chmod 7500 ${WEBROOT}/src/start.sh
+  chown -R node:node ${WEBROOT}
+  chmod 7500 ${WEBROOT}/src/start.sh
  fi
 fi
 
@@ -78,7 +79,7 @@ if [[ "$RUN_SCRIPTS" == "1" ]] ; then
   if [ -d "$scripts_dir" ]; then
     if [ -z "$SKIP_CHMOD" ]; then
       # make scripts executable incase they aren't
-      sudo chmod -Rf 750 $scripts_dir; sync;
+      chmod -Rf 750 $scripts_dir; sync;
     fi
     # run scripts in number order
     for i in `ls $scripts_dir`; do $scripts_dir/$i ; done
@@ -90,17 +91,21 @@ fi
 if [ -z "$SKIP_NPM" ]; then
   if [ "$APPLICATION_ENV" == "development" ]; then
     echo "Install npm packages and dev dependencies"
-    cd ${WEBROOT}/src; npm install
+    cd ${WEBROOT}/src; rm -rf node_modules; npm install --unsafe-perm
   else
     echo "Install npm packages"
-    cd ${WEBROOT}/src; npm install --omit=dev
+    cd ${WEBROOT}/src; rm -rf node_modules; npm install --omit=dev --unsafe-perm
   fi
 fi
 
 # Set custom webhome/node
 if [ ! -z "$WEBROOT" ]; then
- sudo sed -i "s#command = /var/www/app;#command = ${WEBROOT};#g" /etc/supervisord.conf
+ sed -i "s#command = /var/www/app;#command = ${WEBROOT};#g" /etc/supervisord.conf
 fi
 
+chown -R node:node /home/node/
+chown -R node:node /var/log/node/
+
 # Start supervisord and services
-sudo /usr/bin/supervisord -n -c /etc/supervisord.conf
+${WEBROOT}/src/start.sh
+# /usr/bin/supervisord -n -c /etc/supervisord.conf
