@@ -23,7 +23,6 @@ LABEL maintainer="Pablo Sánchez <pablo.sanchez@aranova.es>"
 ENV DOCKER_IMAGE=psanchezg/node-git
 ENV DOCKER_IMAGE_OS=${DISTRO}
 ENV DOCKER_IMAGE_TAG=${DISTRO_VER}
-ENV GIT_CONFIG_COMMANDS=${GIT_CONFIG_COMMANDS:=()}
 
 LABEL maintainer="Pablo Sánchez <pablo.sanchez@aranova.es>" \
     org.label-schema.build-date="${BUILD_DATE}" \
