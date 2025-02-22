@@ -29,11 +29,12 @@ if [ ! -z "$GIT_NAME" ]; then
  git config --global push.default simple
 fi
 
-if [ ${#GIT_CONFIG_COMMANDS[@]} -gt 0 ]; then
-  for cmd in "${GIT_CONFIG_COMMANDS[@]}"; do
+if [ -n "$GIT_CONFIG_COMMANDS" ]; then
+  echo "Ejecutando configuración de Git..."
+  while IFS= read -r cmd; do
     echo "Ejecutando: $cmd"
     eval "$cmd"
-  done
+  done <<< "$GIT_CONFIG_COMMANDS"
 fi
 
 # Dont pull code down if the .git folder exists
