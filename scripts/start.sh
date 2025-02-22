@@ -29,6 +29,13 @@ if [ ! -z "$GIT_NAME" ]; then
  git config --global push.default simple
 fi
 
+if [ ${#GIT_CONFIG_COMMANDS[@]} -gt 0 ]; then
+  for cmd in "${GIT_CONFIG_COMMANDS[@]}"; do
+    echo "Ejecutando: $cmd"
+    eval "$cmd"
+  done
+fi
+
 # Dont pull code down if the .git folder exists
 if [ ! -d "${WEBROOT}/.git" ]; then
  # Pull down code from git for our site!
